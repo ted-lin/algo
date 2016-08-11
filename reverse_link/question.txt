@@ -1,0 +1,9 @@
+0 -> 1 -> 2 -> 3 -> 4 -> 5
+
+Please seperate this list into odd index list ane even index list.
+And reverse odd index list.
+
+Expected result:
+  0 -> 2 -> 4
+  5 -> 3 -> 1
+
