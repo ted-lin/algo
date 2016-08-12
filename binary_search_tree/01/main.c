@@ -16,9 +16,12 @@ struct node *root = NULL;
 
 /* impl. of bst */
 struct node *insert(struct node *root, int data);
+struct node *search(struct node *root, int data);
+void cleanUp(struct node *root);
 
 /* impl. of traversal */
 void inOrder(struct node *root);
+void reverseInOrder(struct node *root);
 void preOrder(struct node *root);
 void postOrder(struct node *root);
 
@@ -93,24 +96,83 @@ void inOrder(struct node *root)
 	if (!depth)
 		printf("\n");
 }
+
+void reverseInOrder(struct node *root)
+{
+	static int depth = 0;
+
+	if (!depth)
+		printf("%s: ", __func__);
+
+	if (root) {
+		++depth;
+		reverseInOrder(root->right);
+		printf("%d ", root->value);
+		reverseInOrder(root->left);
+		--depth;
+	}
+
+	if (!depth)
+		printf("\n");
+}
+void cleanUp(struct node *root)
+{
+	static int depth = 0;
+
+	if (!depth)
+		printf("%s: ", __func__);
+
+	if (root) {
+		++depth;
+		printf("(0x%p, %d) ", root, root->value);
+		cleanUp(root->left);
+		cleanUp(root->right);
+		free(root);
+		--depth;
+	}
+
+	if (!depth)
+		printf("\n");
+}
+
+struct node *search(struct node *root, int data)
+{
+	if (root) {
+		if (data == root->value)
+			return root;
+		else if (data < root->value)
+			return search(root->left, data);
+		return search(root->right, data);
+	}
+	return NULL;
+}
+
 int main() {
 	unsigned int n, i;
-	int v;
+	struct node *node;
 
 	n = 10;
-
-//	printf("How many node will you insert?\n");
-//	scanf("%u", &n);
-
-	for (i = 0; i < n; ++i) {
-//		scanf("%d", &v);
+	for (i = 0; i < n; ++i)
 		root = insert(root, test[i]);
-	}
 
 	preOrder(root);
 	inOrder(root);
+	reverseInOrder(root);
 	postOrder(root);
 
+	node = search(root, 3);
+	if (node)
+		printf("Find 0x%p, %d\n", node, node->value);
+	else
+		printf("Not found\n");
+
+	node = search(root, 8);
+	if (node)
+		printf("Find 0x%p, %d\n", node, node->value);
+	else
+		printf("Not found\n");
+
+	cleanUp(root);
 	return 0;
 }
 
