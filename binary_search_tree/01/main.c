@@ -1,7 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
 
-/* test data built-in */
+/*
+ * test data 1
+ * Not balanced.
+ */
 int test[10] = {
 	5, 2, 3, 1, 7, -1, 6, 4, 9, 0};
 
@@ -10,6 +13,7 @@ struct node
 	int value;
 	struct node *left;
 	struct node *right;
+	int height;
 };
 
 struct node *root = NULL;
@@ -32,11 +36,16 @@ struct node *insert(struct node *root, int data)
 		root->left = NULL;
 		root->right = NULL;
 		root->value = data;
+		root->height = 0;
 	} else if (data < root->value) {
 		root->left = insert(root->left, data);
-	} else
+		if (root->height < root->left->height + 1)
+			root->height = root->left->height + 1;
+	} else {
 		root->right = insert(root->right, data);
-
+		if (root->height < root->right->height + 1)
+			root->height = root->right->height + 1;
+	}
 	return root;
 }
 
@@ -49,7 +58,7 @@ void preOrder(struct node *root)
 
 	if (root) {
 		++depth;
-		printf("%d ", root->value);
+		printf("%d(%d) ", root->value, root->height);
 		preOrder(root->left);
 		preOrder(root->right);
 		--depth;
@@ -70,7 +79,7 @@ void postOrder(struct node *root)
 		++depth;
 		postOrder(root->left);
 		postOrder(root->right);
-		printf("%d ", root->value);
+		printf("%d(%d) ", root->value, root->height);
 		--depth;
 	}
 
@@ -88,7 +97,7 @@ void inOrder(struct node *root)
 	if (root) {
 		++depth;
 		inOrder(root->left);
-		printf("%d ", root->value);
+		printf("%d(%d) ", root->value, root->height);
 		inOrder(root->right);
 		--depth;
 	}
@@ -107,7 +116,7 @@ void reverseInOrder(struct node *root)
 	if (root) {
 		++depth;
 		reverseInOrder(root->right);
-		printf("%d ", root->value);
+		printf("%d(%d) ", root->value, root->height);
 		reverseInOrder(root->left);
 		--depth;
 	}
@@ -115,6 +124,7 @@ void reverseInOrder(struct node *root)
 	if (!depth)
 		printf("\n");
 }
+
 void cleanUp(struct node *root)
 {
 	static int depth = 0;
@@ -135,6 +145,18 @@ void cleanUp(struct node *root)
 		printf("\n");
 }
 
+void dumpRawData()
+{
+	int len = sizeof(test)/sizeof(int), i;
+
+	printf("Raw data: ");
+
+	for(i = 0; i < len; ++i)
+		printf("%d ", test[i]);
+
+	printf("\n");
+}
+
 struct node *search(struct node *root, int data)
 {
 	if (root) {
@@ -151,9 +173,11 @@ int main() {
 	unsigned int n, i;
 	struct node *node;
 
-	n = 10;
+	n = sizeof(test)/sizeof(int);
 	for (i = 0; i < n; ++i)
 		root = insert(root, test[i]);
+
+	dumpRawData();
 
 	preOrder(root);
 	inOrder(root);
