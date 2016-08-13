@@ -22,6 +22,13 @@ int test2[6] = {
 int test3[6] = {
 	10, 8, 9, 5, 4, 7};
 
+/*
+ * test data 4
+ * test insert count
+ */
+int test4[5] = {
+	10, 9, 8, 7, 6};
+
 struct node
 {
 	int value;
@@ -68,6 +75,48 @@ struct node *insert(struct node *root, int data)
 		root->right->parent = root;
 	}
 	return root;
+}
+
+struct node *insert2(struct node *root, int data)
+{
+	struct node *target = NULL;
+	struct node *cur = NULL;
+	struct node *tree = root;
+
+	/* search deeply */
+	while (root) {
+		cur = root; //keep current
+		if (data < root->value)
+			root = root->left;
+		else
+			root = root->right;
+	}
+
+	target = (struct node *) malloc(sizeof(struct node));
+	target->left = NULL;
+	target->right = NULL;
+	target->parent = cur;
+	target->height = 0;
+	target->value = data;
+	if (!target->parent)
+		return target; /* root case */
+	else if (data < cur->value)
+		cur->left = target; /* left case */
+	else
+		cur->right = target; /* right case */
+
+	/* update height */
+	while (cur) {
+		if (cur->height < target->height + 1) {
+			cur->height = target->height + 1;
+			target = cur;
+			cur = cur->parent;
+		} else
+			break;
+	}
+
+	/* return root */
+	return tree;
 }
 
 void preOrder(struct node *root)
@@ -264,6 +313,14 @@ struct node *buildTree(struct node *root, int *data, int len)
 	return root;
 }
 
+struct node *buildTree2(struct node *root, int *data, int len)
+{
+	int i = 0;
+	for (i = 0; i < len; ++i)
+		root = insert2(root, data[i]);
+	return root;
+}
+
 int main() {
 	unsigned int len, i;
 	struct node *node;
@@ -337,6 +394,42 @@ int main() {
 	}
 	cleanUp(root);
 	root = NULL;
+
+	///* test 4 */
+	//printf("\n test insert counting\n");
+
+	//len = sizeof(test4)/sizeof(int);
+	//root = buildTree(root, test4, len);
+
+	//cleanUp(root);
+	//root = NULL;
+
+	/* test 5 */
+	printf("\n test insert 2 \n");
+	len = sizeof(test)/sizeof(int);
+	root = buildTree(root, test, len);
+	dumpRawData(test, len);
+	preOrder(root);
+	inOrder(root);
+	postOrder(root);
+	cleanUp(root);
+	root = NULL;
+	root = buildTree2(root, test, len);
+	dumpRawData(test, len);
+	preOrder(root);
+	inOrder(root);
+	postOrder(root);
+	cleanUp(root);
+	root = NULL;
+
+	///* test 6 */
+	//printf("\n test insert 2 counting\n");
+
+	//len = sizeof(test4)/sizeof(int);
+	//root = buildTree2(root, test4, len);
+
+	//cleanUp(root);
+	//root = NULL;
 
 	return 0;
 }
