@@ -119,6 +119,46 @@ struct node *insert2(struct node *root, int data)
 	return tree;
 }
 
+void insert3(struct node **root, int data)
+{
+	struct node *target = NULL;
+	struct node *cur = NULL;
+	struct node *tree = *root;
+
+	/* search deeply */
+	while (tree) {
+		cur = tree; //keep current
+		if (data < tree->value)
+			tree = tree->left;
+		else
+			tree = tree->right;
+	}
+
+	target = (struct node *) malloc(sizeof(struct node));
+	target->left = NULL;
+	target->right = NULL;
+	target->parent = cur;
+	target->height = 0;
+	target->value = data;
+	if (!target->parent) {
+		*root = target; /* root case */
+		return;
+	} else if (data < cur->value)
+		cur->left = target; /* left case */
+	else
+		cur->right = target; /* right case */
+
+	/* update height */
+	while (cur) {
+		if (cur->height < target->height + 1) {
+			cur->height = target->height + 1;
+			target = cur;
+			cur = cur->parent;
+		} else
+			break;
+	}
+}
+
 void preOrder(struct node *root)
 {
 	static int depth = 0;
@@ -321,6 +361,13 @@ struct node *buildTree2(struct node *root, int *data, int len)
 	return root;
 }
 
+void buildTree3(struct node **root, int *data, int len)
+{
+	int i = 0;
+	for (i = 0; i < len; ++i)
+		insert3(root, data[i]);
+}
+
 int main() {
 	unsigned int len, i;
 	struct node *node;
@@ -415,6 +462,13 @@ int main() {
 	cleanUp(root);
 	root = NULL;
 	root = buildTree2(root, test, len);
+	dumpRawData(test, len);
+	preOrder(root);
+	inOrder(root);
+	postOrder(root);
+	cleanUp(root);
+	root = NULL;
+	buildTree3(&root, test, len);
 	dumpRawData(test, len);
 	preOrder(root);
 	inOrder(root);
