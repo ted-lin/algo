@@ -8,12 +8,27 @@
 int test[10] = {
 	5, 2, 3, 1, 7, -1, 6, 4, 9, 0};
 
+/*
+ * test data 2
+ * test L rotation
+ */
+int test2[6] = {
+	10, 5, 4, 8, 7, 9};
+
+/*
+ * test data 3
+ * test R rotate
+ */
+int test3[6] = {
+	10, 8, 9, 5, 4, 7};
+
 struct node
 {
 	int value;
+	int height;
 	struct node *left;
 	struct node *right;
-	int height;
+	struct node *parent;
 };
 
 struct node *root = NULL;
@@ -29,22 +44,28 @@ void reverseInOrder(struct node *root);
 void preOrder(struct node *root);
 void postOrder(struct node *root);
 
+/* impl. of helper */
+void dumpRawData(int *data, int len);
+
 struct node *insert(struct node *root, int data)
 {
 	if (root == NULL) {
 		root = (struct node *) malloc (sizeof(struct node));
 		root->left = NULL;
 		root->right = NULL;
+		root->parent = NULL;
 		root->value = data;
 		root->height = 0;
 	} else if (data < root->value) {
 		root->left = insert(root->left, data);
 		if (root->height < root->left->height + 1)
 			root->height = root->left->height + 1;
+		root->left->parent = root;
 	} else {
 		root->right = insert(root->right, data);
 		if (root->height < root->right->height + 1)
 			root->height = root->right->height + 1;
+		root->right->parent = root;
 	}
 	return root;
 }
@@ -58,7 +79,11 @@ void preOrder(struct node *root)
 
 	if (root) {
 		++depth;
-		printf("%d(%d) ", root->value, root->height);
+		printf("[%d(h:%d", root->value, root->height);
+		if (root->parent)
+			printf(", p:%d)]  ", root->parent->value);
+		else
+			printf(")]  ");
 		preOrder(root->left);
 		preOrder(root->right);
 		--depth;
@@ -79,7 +104,11 @@ void postOrder(struct node *root)
 		++depth;
 		postOrder(root->left);
 		postOrder(root->right);
-		printf("%d(%d) ", root->value, root->height);
+		printf("[%d(h:%d", root->value, root->height);
+		if (root->parent)
+			printf(", p:%d)]  ", root->parent->value);
+		else
+			printf(")]  ");
 		--depth;
 	}
 
@@ -97,7 +126,11 @@ void inOrder(struct node *root)
 	if (root) {
 		++depth;
 		inOrder(root->left);
-		printf("%d(%d) ", root->value, root->height);
+		printf("[%d(h:%d", root->value, root->height);
+		if (root->parent)
+			printf(", p:%d)]  ", root->parent->value);
+		else
+			printf(")]  ");
 		inOrder(root->right);
 		--depth;
 	}
@@ -116,7 +149,11 @@ void reverseInOrder(struct node *root)
 	if (root) {
 		++depth;
 		reverseInOrder(root->right);
-		printf("%d(%d) ", root->value, root->height);
+		printf("[%d(h:%d", root->value, root->height);
+		if (root->parent)
+			printf(", p:%d)]  ", root->parent->value);
+		else
+			printf(")]  ");
 		reverseInOrder(root->left);
 		--depth;
 	}
@@ -145,16 +182,30 @@ void cleanUp(struct node *root)
 		printf("\n");
 }
 
-void dumpRawData()
+void dumpRawData(int *data, int len)
 {
-	int len = sizeof(test)/sizeof(int), i;
+	int i;
 
-	printf("Raw data: ");
+	printf("Dump data: ");
 
 	for(i = 0; i < len; ++i)
-		printf("%d ", test[i]);
+		printf("%d ", data[i]);
 
 	printf("\n");
+}
+
+void dumpTree(struct node *root)
+{
+	int base = 0, offset = 0, height = 0;
+
+	printf("Tree:\n");
+	if (!root) {
+		printf("Empty tree\n");
+		return;
+	}
+
+	base = (1 << (root->height + 1)) - 1;
+	height = root->height;
 }
 
 struct node *search(struct node *root, int data)
@@ -169,15 +220,61 @@ struct node *search(struct node *root, int data)
 	return NULL;
 }
 
+void LRotate(struct node *root, struct node *key)
+{
+	struct node *tmp = key->right;
+
+	key->right = tmp->left;
+	if (tmp->left)
+		tmp->left->parent = key;
+	tmp->parent = key->parent;
+	if (!key->parent)
+		root = tmp;
+	else if (key == key->parent->left)
+		key->parent->left = tmp;
+	else
+		key->parent->right = tmp;
+	tmp->left = key;
+	key->parent = tmp;
+}
+
+void RRotate(struct node *root, struct node *key)
+{
+	struct node *tmp = key->left;
+
+	key->left = tmp->right;
+	if (tmp->right)
+		tmp->right->parent = key;
+	tmp->parent = key->parent;
+	if (!key->parent)
+		root = tmp;
+	else if (key == key->parent->left)
+		key->parent->left = tmp;
+	else
+		key->parent->right = tmp;
+	tmp->right = key;
+	key->parent = tmp;
+}
+
+struct node *buildTree(struct node *root, int *data, int len)
+{
+	int i = 0;
+	for (i = 0; i < len; ++i)
+		root = insert(root, data[i]);
+	return root;
+}
+
 int main() {
-	unsigned int n, i;
+	unsigned int len, i;
 	struct node *node;
 
-	n = sizeof(test)/sizeof(int);
-	for (i = 0; i < n; ++i)
-		root = insert(root, test[i]);
+	/* test 1 */
+	printf("test common binary search tree\n");
 
-	dumpRawData();
+	len = sizeof(test)/sizeof(int);
+	root = buildTree(root, test, len);
+
+	dumpRawData(test, len);
 
 	preOrder(root);
 	inOrder(root);
@@ -197,6 +294,50 @@ int main() {
 		printf("Not found\n");
 
 	cleanUp(root);
+	root = NULL;
+
+	/* test 2 */
+	printf("\ntest L rotate\n");
+
+	len = sizeof(test2)/sizeof(int);
+	root = buildTree(root, test2, len);
+
+	dumpRawData(test2, len);
+	preOrder(root);
+	inOrder(root);
+	postOrder(root);
+	node = search(root, 5);
+	if (node) {
+		printf("LRotate key %d:\n", node->value);
+		LRotate(root, node);
+		preOrder(root);
+		inOrder(root);
+		postOrder(root);
+	}
+	cleanUp(root);
+	root = NULL;
+
+	/* test 3 */
+	printf("\ntest R rotate\n");
+
+	len = sizeof(test3)/sizeof(int);
+	root = buildTree(root, test3, len);
+
+	dumpRawData(test3, len);
+	preOrder(root);
+	inOrder(root);
+	postOrder(root);
+	node = search(root, 8);
+	if (node) {
+		printf("RRotate key %d:\n", node->value);
+		RRotate(root, node);
+		preOrder(root);
+		inOrder(root);
+		postOrder(root);
+	}
+	cleanUp(root);
+	root = NULL;
+
 	return 0;
 }
 
