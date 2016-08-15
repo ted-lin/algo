@@ -128,16 +128,8 @@ void postExtract(Tree *a, Node *x)
 	if (x) {
 		postExtract(a, x->left);
 		postExtract(a, x->right);
-		if (x->parent) {
-			if (x->parent->left == x)
-				x->parent->left = NULL;
-			else
-				x->parent->right = NULL;
-			x->parent = NULL;
-		}
 		x->left = NULL;
 		x->right = NULL;
-		printf("insert %d\n", x->key);
 		insertNode(a, x);
 	}
 }
