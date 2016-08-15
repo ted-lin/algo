@@ -9,6 +9,12 @@
 int test1[10] = {
 	5, 2, 3, 1, 7, -1, 6, 4, 9, 0};
 
+/*
+ * test data 2
+ */
+int test2[10] = {
+	8, 10, 14, 11, 16, 19, 18, 15, 17, 12};
+
 typedef struct Node Node;
 struct Node {
 	int key;
@@ -96,6 +102,9 @@ void insertNode(Tree *t, Node *x)
 	Node *pos = NULL;
 	Node *cur = t->root;
 
+	if (!x)
+		return;
+
 	while(cur) {
 		pos = cur;
 		if (x->key < cur->key)
@@ -112,6 +121,46 @@ void insertNode(Tree *t, Node *x)
 		pos->left = x;
 	else
 		pos->right = x;
+}
+
+void postExtract(Tree *a, Node *x)
+{
+	if (x) {
+		postExtract(a, x->left);
+		postExtract(a, x->right);
+		if (x->parent) {
+			if (x->parent->left == x)
+				x->parent->left = NULL;
+			else
+				x->parent->right = NULL;
+			x->parent = NULL;
+		}
+		x->left = NULL;
+		x->right = NULL;
+		printf("insert %d\n", x->key);
+		insertNode(a, x);
+	}
+}
+
+void mergeTree(Tree *a, Tree *b)
+{
+	postExtract(a, b->root);
+}
+
+void preReverse(Node *x)
+{
+	if (x) {
+		Node *tmp = x->left;
+		x->left = x->right;
+		x->right = tmp;
+		preReverse(x->left);
+		preReverse(x->right);
+	}
+}
+
+void reverseTree(Tree *a)
+{
+	preReverse(a->root);
 }
 
 /* don't update x->left, x->right, caller should responsible */
@@ -219,6 +268,8 @@ void dumpData(int *data, unsigned int size)
 int main(int argc, char **argv)
 {
 	Tree *t = createTree();
+	Tree *t2 = NULL;
+
 	Node *n = NULL;
 
 	printf("test 1: build tree, traversal and clean tree\n");
@@ -242,6 +293,28 @@ int main(int argc, char **argv)
 	preOrder(t->root);
 	inOrder(t->root);
 	postOrder(t->root);
+	cleanTree(t);
+
+	printf("test 4: merge tree\n");
+	t = createTree();
+	t2 = createTree();
+	buildTree(t, test1, sizeof(test1)/sizeof(int));
+	buildTree(t2, test2, sizeof(test2)/sizeof(int));
+	dumpData(test1, sizeof(test1)/sizeof(int));
+	dumpData(test2, sizeof(test2)/sizeof(int));
+
+	mergeTree(t, t2);
+	inOrder(t->root);
+	reverseTree(t);
+	inOrder(t->root);
+	cleanTree(t);
+
+	printf("test 5: reverse tree\n");
+	t = createTree();
+	buildTree(t, test1, sizeof(test1)/sizeof(int));
+	inOrder(t->root);
+	reverseTree(t);
+	inOrder(t->root);
 	cleanTree(t);
 
 	return 0;
